@@ -21,7 +21,7 @@ Controls
 	•	Q → Quit game
 	•	C → Show leaderboard
 
-�Scoring
+Scoring
 	•	Collecting an object (^) → +10 points
 	•	Completing a level → +100 × level number bonus
 	•	Game Over or exit saves your total score in the leaderboard.
