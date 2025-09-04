@@ -11,8 +11,7 @@
 #define MAX_FANT 8
 #define MAX_PUNT 100
 #define MAX_NOME 20
-#define FILE_PUNT "punteggi.dat"
-
+#define FILE_PUNT "scores.dat"
 
 #define COLOR_RESET   "\x1b[0m"
 #define COLOR_MURO    "\x1b[34m"    
@@ -72,7 +71,7 @@ void muovi_fantasma(pos_fantasma *fant, pos_fantasma gio, char lab[SIZE_R][SIZE_
 
         if (new_r < 0 || new_r >= SIZE_R || new_c < 0 || new_c >= SIZE_C)
             continue;
-        if (lab[new_r][new_c] == '*')
+        if (lab[new_r][new_c] == '*' || lab[new_r][new_c] == '^')
             continue;
             
         dir_val[conta_val] = i;
@@ -109,7 +108,7 @@ void muovi_fantasma(pos_fantasma *fant, pos_fantasma gio, char lab[SIZE_R][SIZE_
         fant->colonna = new_c;
         lab[new_r][new_c] = '&';
     } 
-    else if (lab[new_r][new_c] == ' ' || lab[new_r][new_c] == '^') 
+    else if (lab[new_r][new_c] == ' ')
     {
         lab[fant->riga][fant->colonna] = ' ';
         fant->riga = new_r;
@@ -121,7 +120,7 @@ void muovi_fantasma(pos_fantasma *fant, pos_fantasma gio, char lab[SIZE_R][SIZE_
 void stampa_lab(char lab[SIZE_R][SIZE_C], int ogg, int liv, int punti) 
 {
     printf("\033[H\033[J");
-    printf("%sComandi: w=su, s=giu, a=sin, d=des, q=esci, c=classifica | Liv: %s%d%s | Punti: %d | Ogg: %d%s\n", 
+    printf("%sControls: w=up, s=down, a=left, d=right, q=quit, c=scores | Level: %s%d%s | Points: %d | Items: %d%s\n", 
            COLOR_TESTO, COLOR_LIV, liv, COLOR_TESTO, punti, ogg, COLOR_RESET);
     
     for (int i = 0; i < SIZE_R; i++) 
@@ -273,32 +272,32 @@ void mostra_intro_liv(int liv)
 {
     printf("\033[H\033[J");
     printf("%s====================================%s\n", COLOR_LIV, COLOR_RESET);
-    printf("%s            LIVELLO %d              %s\n", COLOR_LIV, liv, COLOR_RESET);
+    printf("%s            LEVEL %d              %s\n", COLOR_LIV, liv, COLOR_RESET);
     printf("%s====================================%s\n\n", COLOR_LIV, COLOR_RESET);
     
-    printf("%sCaratteristiche livello %d:%s\n", COLOR_TESTO, liv, COLOR_RESET);
+    printf("%sLevel %d characteristics:%s\n", COLOR_TESTO, liv, COLOR_RESET);
     
     switch(liv) {
         case 1:
-            printf("- %sLabirinto base%s\n", COLOR_TESTO, COLOR_RESET);
-            printf("- %s2 fantasmi%s\n", COLOR_FANT, COLOR_RESET);
-            printf("- %sMovimenti fantasmi casuali%s\n", COLOR_FANT, COLOR_RESET);
+            printf("- %sBasic maze%s\n", COLOR_TESTO, COLOR_RESET);
+            printf("- %s2 ghosts%s\n", COLOR_FANT, COLOR_RESET);
+            printf("- %sRandom ghost movements%s\n", COLOR_FANT, COLOR_RESET);
             break;
         case 2:
-            printf("- %sLabirinto più complesso%s\n", COLOR_TESTO, COLOR_RESET);
-            printf("- %s4 fantasmi%s\n", COLOR_FANT, COLOR_RESET);
-            printf("- %sFantasmi più intelligenti%s\n", COLOR_FANT, COLOR_RESET);
-            printf("- %sMovimento fantasmi più veloce%s\n", COLOR_FANT, COLOR_RESET);
+            printf("- %sMore complex maze%s\n", COLOR_TESTO, COLOR_RESET);
+            printf("- %s4 ghosts%s\n", COLOR_FANT, COLOR_RESET);
+            printf("- %sSmarter ghosts%s\n", COLOR_FANT, COLOR_RESET);
+            printf("- %sFaster ghost movement%s\n", COLOR_FANT, COLOR_RESET);
             break;
         case 3:
-            printf("- %sLabirinto molto complesso%s\n", COLOR_TESTO, COLOR_RESET);
-            printf("- %s8 fantasmi%s\n", COLOR_FANT, COLOR_RESET);
-            printf("- %sFantasmi inseguono perfettamente%s\n", COLOR_FANT, COLOR_RESET);
-            printf("- %sMovimento fantasmi velocissimo%s\n", COLOR_FANT, COLOR_RESET);
+            printf("- %sVery complex maze%s\n", COLOR_TESTO, COLOR_RESET);
+            printf("- %s8 ghosts%s\n", COLOR_FANT, COLOR_RESET);
+            printf("- %sGhosts follow perfectly%s\n", COLOR_FANT, COLOR_RESET);
+            printf("- %sVery fast ghost movement%s\n", COLOR_FANT, COLOR_RESET);
             break;
     }
     
-    printf("\n%sPremi un tasto per iniziare il livello %d...%s\n", COLOR_TESTO, liv, COLOR_RESET);
+    printf("\n%sPress any key to start level %d...%s\n", COLOR_TESTO, liv, COLOR_RESET);
     leggi_char();
 }
 
@@ -331,14 +330,14 @@ void mostra_classifica()
 {
     printf("\033[H\033[J");
     printf("%s=============================%s\n", COLOR_CLASS, COLOR_RESET);
-    printf("%s        CLASSIFICA          %s\n", COLOR_CLASS, COLOR_RESET);
+    printf("%s        LEADERBOARD          %s\n", COLOR_CLASS, COLOR_RESET);
     printf("%s=============================%s\n\n", COLOR_CLASS, COLOR_RESET);
     
     FILE *file = fopen(FILE_PUNT, "rb");
     if (file == NULL) 
     {
-        printf("%sNessun punteggio registrato!%s\n", COLOR_TESTO, COLOR_RESET);
-        printf("\n%sPremi un tasto per continuare...%s\n", COLOR_TESTO, COLOR_RESET);
+        printf("%sNo scores recorded yet!%s\n", COLOR_TESTO, COLOR_RESET);
+        printf("\n%sPress any key to continue...%s\n", COLOR_TESTO, COLOR_RESET);
         leggi_char();
         return;
     }
@@ -354,7 +353,7 @@ void mostra_classifica()
     
     qsort(punteggi, conta, sizeof(rec_punti), confronta_punteggi);
     
-    printf("%sPos %-15s %-8s %-5s %s%s\n", COLOR_TESTO, "Nome", "Punti", "Liv", "Data", COLOR_RESET);
+    printf("%sPos %-15s %-8s %-5s %s%s\n", COLOR_TESTO, "Name", "Points", "Level", "Date", COLOR_RESET);
     printf("%s---------------------------------%s\n", COLOR_TESTO, COLOR_RESET);
     
     for (int i = 0; i < (conta > 10 ? 10 : conta); i++) 
@@ -363,28 +362,28 @@ void mostra_classifica()
         strftime(data_str, 20, "%d/%m/%Y", localtime(&punteggi[i].data));
         
         if (i == 0) {
-            printf("%s1°  %-15s %-8d %-5d %s%s\n", COLOR_CLASS, 
+            printf("%s1st  %-15s %-8d %-5d %s%s\n", COLOR_CLASS, 
                   punteggi[i].nome, punteggi[i].punti, punteggi[i].liv, data_str, COLOR_RESET);
         } else if (i == 1) {
-            printf("%s2°  %-15s %-8d %-5d %s%s\n", COLOR_CLASS, 
+            printf("%s2nd  %-15s %-8d %-5d %s%s\n", COLOR_CLASS, 
                   punteggi[i].nome, punteggi[i].punti, punteggi[i].liv, data_str, COLOR_RESET);
         } else if (i == 2) {
-            printf("%s3°  %-15s %-8d %-5d %s%s\n", COLOR_CLASS, 
+            printf("%s3rd  %-15s %-8d %-5d %s%s\n", COLOR_CLASS, 
                   punteggi[i].nome, punteggi[i].punti, punteggi[i].liv, data_str, COLOR_RESET);
         } else {
-            printf("%s%-3d %-15s %-8d %-5d %s%s\n", COLOR_TESTO, i + 1, 
+            printf("%s%-3d  %-15s %-8d %-5d %s%s\n", COLOR_TESTO, i + 1, 
                   punteggi[i].nome, punteggi[i].punti, punteggi[i].liv, data_str, COLOR_RESET);
         }
     }
     
-    printf("\n%sPremi un tasto per continuare...%s\n", COLOR_TESTO, COLOR_RESET);
+    printf("\n%sPress any key to continue...%s\n", COLOR_TESTO, COLOR_RESET);
     leggi_char();
 }
 
 void get_nome_giocatore(char *nome) 
 {
     printf("\033[H\033[J");
-    printf("%sInserisci il tuo nome (max %d caratteri):%s ", COLOR_TESTO, MAX_NOME - 1, COLOR_RESET);
+    printf("%sEnter your name (max %d characters):%s ", COLOR_TESTO, MAX_NOME - 1, COLOR_RESET);
     
     int i = 0;
     char c;
@@ -398,7 +397,7 @@ void get_nome_giocatore(char *nome)
     nome[i] = '\0';
     
     if (strlen(nome) == 0) {
-        strcpy(nome, "Anonimo");
+        strcpy(nome, "Anonymous");
     }
 }
 
@@ -412,14 +411,14 @@ int main()
 
     while(nuova_partita) {
         printf("\033[H\033[J");
-        printf("%sBENVENUTO IN PACMAN!%s \n", COLOR_TESTO, COLOR_RESET);
-        printf("%sGuida: '%s@%s' sei tu, '%s^%s' sono gli oggetti, '%s&%s' sono i fantasmi!%s \n", 
+        printf("%sWELCOME TO PACMAN!%s \n", COLOR_TESTO, COLOR_RESET);
+        printf("%sGuide: '%s@%s' is you, '%s^%s' are items, '%s&%s' are ghosts!%s \n", 
                COLOR_TESTO, COLOR_GIOC, COLOR_TESTO, COLOR_OGG, COLOR_TESTO, COLOR_FANT, COLOR_TESTO, COLOR_RESET);
-        printf("%sCompleta 3 livelli di difficoltà crescente!%s\n", COLOR_LIV, COLOR_RESET);
+        printf("%sComplete 3 levels of increasing difficulty!%s\n", COLOR_LIV, COLOR_RESET);
         
-        printf("\n%sVuoi vedere la classifica prima di iniziare? (s/n)%s ", COLOR_TESTO, COLOR_RESET);
+        printf("\n%sDo you want to see the leaderboard first? (y/n)%s ", COLOR_TESTO, COLOR_RESET);
         char input = leggi_char();
-        if (input == 's' || input == 'S') 
+        if (input == 'y' || input == 'Y') 
         {
             mostra_classifica();
         }
@@ -449,7 +448,14 @@ int main()
             
             giocatore.riga = 10;
             giocatore.colonna = 30;
-            lab[giocatore.riga][giocatore.colonna] = '@';
+
+            if (lab[giocatore.riga][giocatore.colonna] == '^') 
+            {
+                ogg--; 
+                punti_liv += 10; 
+            }
+            lab[giocatore.riga][giocatore.colonna] = '@'; 
+
             
             stampa_lab(lab, ogg, liv_corrente, punti_totali);
             
@@ -460,7 +466,7 @@ int main()
                 if (input_utente == 0) {
                     input_utente = leggi_char();
                 } else {
-                    printf("Errore input\n");
+                    printf("Input error\n");
                     return -1;
                 }
 
@@ -558,13 +564,13 @@ int main()
                         break;
 
                     case 'q':
-                        printf("%sVuoi uscire? (s/n)%s \n", COLOR_TESTO, COLOR_RESET);
+                        printf("%sDo you want to quit? (y/n)%s \n", COLOR_TESTO, COLOR_RESET);
                         input_utente = leggi_char();
-                        if(input_utente == 's' || input_utente == 'S') {
-                            printf("%sArrivederci!%s\n", COLOR_TESTO, COLOR_RESET);
+                        if(input_utente == 'y' || input_utente == 'Y') {
+                            printf("%sGoodbye!%s\n", COLOR_TESTO, COLOR_RESET);
                             return 0;
                         }
-                        printf("%sPartita continua!%s\n", COLOR_TESTO, COLOR_RESET);
+                        printf("%sGame continues!%s\n", COLOR_TESTO, COLOR_RESET);
                         break;
                         
                     case 'c':
@@ -599,30 +605,30 @@ int main()
 
                 if(morte_flag) {
                     printf("\033[H\033[J");
-                    printf("%sGame Over! Sei stato catturato da un fantasma al livello %d!%s\n", COLOR_FANT, liv_corrente, COLOR_RESET);
-                    printf("%sPunteggio finale: %d%s\n", COLOR_TESTO, punti_totali + punti_liv, COLOR_RESET);
+                    printf("%sGame Over! You were caught by a ghost at level %d!%s\n", COLOR_FANT, liv_corrente, COLOR_RESET);
+                    printf("%sFinal score: %d%s\n", COLOR_TESTO, punti_totali + punti_liv, COLOR_RESET);
                     
                     salva_punteggio(nome_gioc, punti_totali + punti_liv, liv_corrente);
                     
                   
-                    printf("%sVuoi vedere la classifica? (s/n)%s ", COLOR_TESTO, COLOR_RESET);
+                    printf("%sDo you want to see the leaderboard? (y/n)%s ", COLOR_TESTO, COLOR_RESET);
                     fflush(stdout);
                     char risposta = leggi_char();
-                    if (risposta == 's' || risposta == 'S') {
+                    if (risposta == 'y' || risposta == 'Y') {
                         mostra_classifica();
                     }
                     
            
-                    printf("%sCosa vuoi fare?%s\n", COLOR_TESTO, COLOR_RESET);
-                    printf("%s1. Rigiocare dal livello 1 con lo stesso nome%s\n", COLOR_TESTO, COLOR_RESET);
-                    printf("%s2. Rigiocare dal livello 1 con un nuovo nome%s\n", COLOR_TESTO, COLOR_RESET);
-                    printf("%s3. Uscire dal gioco%s\n", COLOR_TESTO, COLOR_RESET);
-                    printf("%sScelta (1-3):%s ", COLOR_TESTO, COLOR_RESET);
+                    printf("%sWhat do you want to do?%s\n", COLOR_TESTO, COLOR_RESET);
+                    printf("%s1. Play again from level 1 with the same name%s\n", COLOR_TESTO, COLOR_RESET);
+                    printf("%s2. Play again from level 1 with a new name%s\n", COLOR_TESTO, COLOR_RESET);
+                    printf("%s3. Exit the game%s\n", COLOR_TESTO, COLOR_RESET);
+                    printf("%sChoice (1-3):%s ", COLOR_TESTO, COLOR_RESET);
                     fflush(stdout);
                     
                     risposta = leggi_char();
                     while(risposta < '1' || risposta > '3') {
-                        printf("%sErrore input. Inserisci 1, 2 o 3:%s ", COLOR_TESTO, COLOR_RESET);
+                        printf("%sInput error. Enter 1, 2 or 3:%s ", COLOR_TESTO, COLOR_RESET);
                         risposta = leggi_char();
                     }
                     
@@ -634,7 +640,7 @@ int main()
                         nuova_partita = 1; 
                         break;
                     } else {
-                        printf("%sGrazie per aver giocato!%s\n", COLOR_TESTO, COLOR_RESET);
+                        printf("%sThanks for playing!%s\n", COLOR_TESTO, COLOR_RESET);
                         return 0;
                     }
                 }
@@ -654,43 +660,43 @@ int main()
             if (liv_completo) {
                 if (liv_corrente < 3) {
                     printf("\033[H\033[J");
-                    printf("%sComplimenti! Livello %d completato!%s\n", COLOR_LIV, liv_corrente, COLOR_RESET);
-                    printf("%sPunti: %d + %d (bonus livello) = %d%s\n", 
+                    printf("%sCongratulations! Level %d completed!%s\n", COLOR_LIV, liv_corrente, COLOR_RESET);
+                    printf("%sPoints: %d + %d (level bonus) = %d%s\n", 
                            COLOR_TESTO, punti_liv, liv_corrente * 100, punti_liv + liv_corrente * 100, COLOR_RESET);
-                    printf("%sPunteggio totale: %d%s\n", COLOR_TESTO, punti_totali, COLOR_RESET);
-                    printf("%sPronto per il livello %d? (s/n)%s\n", COLOR_LIV, liv_corrente + 1, COLOR_RESET);
+                    printf("%sTotal score: %d%s\n", COLOR_TESTO, punti_totali, COLOR_RESET);
+                    printf("%sReady for level %d? (y/n)%s\n", COLOR_LIV, liv_corrente + 1, COLOR_RESET);
                     
                     input_utente = leggi_char();
-                    if (input_utente != 's' && input_utente != 'S') {
+                    if (input_utente != 'y' && input_utente != 'Y') {
                         salva_punteggio(nome_gioc, punti_totali, liv_corrente);
-                        printf("%sGrazie per aver giocato! Punteggio finale: %d%s\n", COLOR_TESTO, punti_totali, COLOR_RESET);
+                        printf("%sThanks for playing! Final score: %d%s\n", COLOR_TESTO, punti_totali, COLOR_RESET);
                         return 0;
                     }
                 } else {
                     printf("\033[H\033[J");
                     printf("%s*************************************%s\n", COLOR_LIV, COLOR_RESET);
                     printf("%s*                                   *%s\n", COLOR_LIV, COLOR_RESET);
-                    printf("%s*      COMPLIMENTI!                 *%s\n", COLOR_LIV, COLOR_RESET);
-                    printf("%s*      HAI COMPLETATO IL GIOCO!     *%s\n", COLOR_LIV, COLOR_RESET);
+                    printf("%s*      CONGRATULATIONS!             *%s\n", COLOR_LIV, COLOR_RESET);
+                    printf("%s*      YOU COMPLETED THE GAME!      *%s\n", COLOR_LIV, COLOR_RESET);
                     printf("%s*                                   *%s\n", COLOR_LIV, COLOR_RESET);
                     printf("%s*************************************%s\n\n", COLOR_LIV, COLOR_RESET);
                     
-                    printf("%sPunteggio finale: %d%s\n", COLOR_TESTO, punti_totali, COLOR_RESET);
-                    printf("%sHai completato tutti e 3 i livelli!%s\n", COLOR_TESTO, COLOR_RESET);
+                    printf("%sFinal score: %d%s\n", COLOR_TESTO, punti_totali, COLOR_RESET);
+                    printf("%sYou completed all 3 levels!%s\n", COLOR_TESTO, COLOR_RESET);
                     
                     salva_punteggio(nome_gioc, punti_totali, liv_corrente);
                     
             
-                    printf("%sCosa vuoi fare?%s\n", COLOR_TESTO, COLOR_RESET);
-                    printf("%s1. Rigiocare dal livello 1 con lo stesso nome%s\n", COLOR_TESTO, COLOR_RESET);
-                    printf("%s2. Rigiocare dal livello 1 con un nuovo nome%s\n", COLOR_TESTO, COLOR_RESET);
-                    printf("%s3. Uscire dal gioco%s\n", COLOR_TESTO, COLOR_RESET);
-                    printf("%sScelta (1-3):%s ", COLOR_TESTO, COLOR_RESET);
+                    printf("%sWhat do you want to do?%s\n", COLOR_TESTO, COLOR_RESET);
+                    printf("%s1. Play again from level 1 with the same name%s\n", COLOR_TESTO, COLOR_RESET);
+                    printf("%s2. Play again from level 1 with a new name%s\n", COLOR_TESTO, COLOR_RESET);
+                    printf("%s3. Exit the game%s\n", COLOR_TESTO, COLOR_RESET);
+                    printf("%sChoice (1-3):%s ", COLOR_TESTO, COLOR_RESET);
                     fflush(stdout);
                     
                     char risposta = leggi_char();
                     while(risposta < '1' || risposta > '3') {
-                        printf("%sErrore input. Inserisci 1, 2 o 3:%s ", COLOR_TESTO, COLOR_RESET);
+                        printf("%sInput error. Enter 1, 2 or 3:%s ", COLOR_TESTO, COLOR_RESET);
                         risposta = leggi_char();
                     }
                     
@@ -701,7 +707,7 @@ int main()
                         nuova_partita = 1;
                         liv_corrente = 0;
                     } else {
-                        printf("%sGrazie per aver giocato!%s\n", COLOR_TESTO, COLOR_RESET);
+                        printf("%sThanks for playing!%s\n", COLOR_TESTO, COLOR_RESET);
                         nuova_partita = 0;
                     }
                 }
